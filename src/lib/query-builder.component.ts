@@ -1,16 +1,13 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   contentChild,
   contentChildren,
-  inject,
   input,
   model,
 } from '@angular/core';
 import { QueryGroupComponent } from './query-group.component';
-import { QueryGroup, QuerySchema, createEmptyGroup } from './query-schema.types';
-import { QUERY_SCHEMA } from './query-schema.token';
+import { QueryGroup, QuerySchema, createEmptyGroup } from './query-builder.types';
 import {
   QbFieldSelectorDirective,
   QbOperatorSelectorDirective,
@@ -18,17 +15,39 @@ import {
   QbValueInputDirective,
 } from './query-builder.templates';
 
+/**
+ * The main Query Builder component.
+ *
+ * @example
+ * // Basic usage
+ * const schema = createSchema({
+ *   fields: [
+ *     { key: 'name', label: 'Name', type: 'text' },
+ *     { key: 'age', label: 'Age', type: 'number' },
+ *   ]
+ * });
+ *
+ * <qb-query-builder [schema]="schema" [(value)]="query" />
+ *
+ * @example
+ * // With custom templates
+ * <qb-query-builder [schema]="schema" [(value)]="query">
+ *   <ng-template qbValueInput="text-input" let-value let-onChange="onChange">
+ *     <my-custom-input [value]="value" (valueChange)="onChange($event)" />
+ *   </ng-template>
+ * </qb-query-builder>
+ */
 @Component({
-  selector: 'app-query-builder',
+  selector: 'qb-query-builder',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [QueryGroupComponent],
   template: `
-    <fieldset class="query-builder-wrapper" [disabled]="disabled()">
-      <legend class="sr-only">Query builder</legend>
-      <app-query-group
+    <fieldset class="qb-wrapper" [disabled]="disabled()">
+      <legend class="qb-sr-only">Query builder</legend>
+      <qb-group
         [(group)]="value"
         [depth]="0"
-        [schema]="resolvedSchema()"
+        [schema]="schema()"
         [fieldSelectorTpl]="fieldSelectorTpl()?.template"
         [operatorSelectorTpl]="operatorSelectorTpl()?.template"
         [valueInputTpls]="valueInputTpls()"
@@ -37,7 +56,7 @@ import {
     </fieldset>
   `,
   styles: `
-    .sr-only {
+    .qb-sr-only {
       position: absolute;
       width: 1px;
       height: 1px;
@@ -49,27 +68,27 @@ import {
       border: 0;
     }
 
-    .query-builder-wrapper {
+    .qb-wrapper {
       border: none;
       padding: 0;
       margin: 0;
     }
 
-    .query-builder-wrapper:disabled {
+    .qb-wrapper:disabled {
       opacity: 0.6;
       pointer-events: none;
     }
   `,
 })
 export class QueryBuilderComponent {
-  private readonly defaultSchema = inject(QUERY_SCHEMA);
-
+  /** The query value (two-way bindable) */
   readonly value = model<QueryGroup>(createEmptyGroup());
-  readonly disabled = model(false);
-  readonly schema = input<QuerySchema>();
 
-  // Use provided schema or fall back to injected default
-  protected readonly resolvedSchema = computed(() => this.schema() ?? this.defaultSchema);
+  /** Whether the query builder is disabled */
+  readonly disabled = model(false);
+
+  /** The schema defining fields and operators (required) */
+  readonly schema = input.required<QuerySchema>();
 
   // Content queries for custom templates
   readonly fieldSelectorTpl = contentChild(QbFieldSelectorDirective);

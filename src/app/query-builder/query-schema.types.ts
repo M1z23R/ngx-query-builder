@@ -261,5 +261,5 @@ export abstract class QuerySchema {
   abstract getFieldByKey(key: string): FieldDef | undefined;
   abstract getOperatorByKey(key: OperatorKey): OperatorDef;
   abstract getOperatorsForField(field: FieldDef): [OperatorKey, OperatorDef][];
-  abstract resolveValueInput(field: FieldDef, operator: OperatorDef): InputType | null;
+  abstract resolveValueInput(field: FieldDef, operator: OperatorDef, operatorKey?: OperatorKey): InputType | null;
 }

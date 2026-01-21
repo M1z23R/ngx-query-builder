@@ -17,7 +17,7 @@ import {
   OperatorKey,
   QueryCondition,
   QuerySchema,
-} from './query-schema.types';
+} from './query-builder.types';
 import {
   FieldSelectorContext,
   OperatorSelectorContext,
@@ -27,13 +27,13 @@ import {
 } from './query-builder.templates';
 
 @Component({
-  selector: 'app-query-condition',
+  selector: 'qb-condition',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet],
   template: `
-    <div class="condition-row">
-      <div class="field-group">
-        <label [for]="'field-' + index()">Field</label>
+    <div class="qb-condition-row">
+      <div class="qb-field-group">
+        <label [for]="'qb-field-' + index()">Field</label>
         @if (fieldSelectorTpl(); as tpl) {
           <ng-container
             [ngTemplateOutlet]="tpl"
@@ -41,7 +41,7 @@ import {
           />
         } @else {
           <select
-            [id]="'field-' + index()"
+            [id]="'qb-field-' + index()"
             [value]="condition().field ?? ''"
             (change)="onFieldChange($event)"
           >
@@ -54,8 +54,8 @@ import {
       </div>
 
       @if (selectedField()) {
-        <div class="field-group">
-          <label [for]="'operator-' + index()">Operator</label>
+        <div class="qb-field-group">
+          <label [for]="'qb-operator-' + index()">Operator</label>
           @if (operatorSelectorTpl(); as tpl) {
             <ng-container
               [ngTemplateOutlet]="tpl"
@@ -63,7 +63,7 @@ import {
             />
           } @else {
             <select
-              [id]="'operator-' + index()"
+              [id]="'qb-operator-' + index()"
               [value]="condition().operator ?? ''"
               (change)="onOperatorChange($event)"
             >
@@ -77,8 +77,8 @@ import {
       }
 
       @if (resolvedInputType(); as inputType) {
-        <div class="field-group">
-          <label [for]="'value-' + index()">Value</label>
+        <div class="qb-field-group">
+          <label [for]="'qb-value-' + index()">Value</label>
           @if (valueInputTpl(); as tpl) {
             <ng-container
               [ngTemplateOutlet]="tpl"
@@ -89,7 +89,7 @@ import {
               @case (INPUT_TYPES.TEXT) {
                 <input
                   type="text"
-                  [id]="'value-' + index()"
+                  [id]="'qb-value-' + index()"
                   [value]="condition().value ?? ''"
                   (input)="onTextInput($event)"
                 />
@@ -97,7 +97,7 @@ import {
               @case (INPUT_TYPES.NUMBER) {
                 <input
                   type="number"
-                  [id]="'value-' + index()"
+                  [id]="'qb-value-' + index()"
                   [value]="condition().value ?? ''"
                   (input)="onNumberInput($event)"
                 />
@@ -105,7 +105,7 @@ import {
               @case (INPUT_TYPES.DATE) {
                 <input
                   type="date"
-                  [id]="'value-' + index()"
+                  [id]="'qb-value-' + index()"
                   [value]="condition().value ?? ''"
                   (input)="onTextInput($event)"
                 />
@@ -113,18 +113,18 @@ import {
               @case (INPUT_TYPES.BOOLEAN) {
                 <input
                   type="checkbox"
-                  [id]="'value-' + index()"
+                  [id]="'qb-value-' + index()"
                   [checked]="condition().value === true"
                   [disabled]="true"
-                  [attr.aria-describedby]="'bool-hint-' + index()"
+                  [attr.aria-describedby]="'qb-bool-hint-' + index()"
                 />
-                <span [id]="'bool-hint-' + index()" class="hint">
+                <span [id]="'qb-bool-hint-' + index()" class="qb-hint">
                   Always true
                 </span>
               }
               @case (INPUT_TYPES.SELECT) {
                 <select
-                  [id]="'value-' + index()"
+                  [id]="'qb-value-' + index()"
                   [value]="condition().value ?? ''"
                   (change)="onSelectChange($event)"
                 >
@@ -136,9 +136,9 @@ import {
               }
               @case (INPUT_TYPES.MULTI_SELECT) {
                 <select
-                  [id]="'value-' + index()"
+                  [id]="'qb-value-' + index()"
                   multiple
-                  [attr.aria-describedby]="'multi-hint-' + index()"
+                  [attr.aria-describedby]="'qb-multi-hint-' + index()"
                   (change)="onMultiSelectChange($event)"
                 >
                   @for (opt of fieldOptions(); track opt.value) {
@@ -150,7 +150,7 @@ import {
                     </option>
                   }
                 </select>
-                <span [id]="'multi-hint-' + index()" class="hint">
+                <span [id]="'qb-multi-hint-' + index()" class="qb-hint">
                   Hold Ctrl/Cmd to select multiple
                 </span>
               }
@@ -167,7 +167,7 @@ import {
       } @else {
         <button
           type="button"
-          class="remove-btn"
+          class="qb-remove-btn"
           [attr.aria-label]="'Remove condition ' + (index() + 1)"
           (click)="remove.emit()"
         >
@@ -177,27 +177,27 @@ import {
     </div>
   `,
   styles: `
-    .condition-row {
+    .qb-condition-row {
       display: flex;
       gap: 0.75rem;
       align-items: flex-end;
       flex-wrap: wrap;
     }
 
-    .field-group {
+    .qb-field-group {
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
     }
 
-    .field-group label {
+    .qb-field-group label {
       font-size: 0.75rem;
       font-weight: 500;
       color: #555;
     }
 
-    .field-group select,
-    .field-group input {
+    .qb-field-group select,
+    .qb-field-group input {
       padding: 0.5rem 0.75rem;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -205,19 +205,19 @@ import {
       min-width: 150px;
     }
 
-    .field-group select:focus,
-    .field-group input:focus {
+    .qb-field-group select:focus,
+    .qb-field-group input:focus {
       outline: 2px solid #0066cc;
       outline-offset: 1px;
       border-color: #0066cc;
     }
 
-    .hint {
+    .qb-hint {
       font-size: 0.7rem;
       color: #666;
     }
 
-    .remove-btn {
+    .qb-remove-btn {
       padding: 0.5rem 0.75rem;
       background: #dc3545;
       color: white;
@@ -228,11 +228,11 @@ import {
       line-height: 1;
     }
 
-    .remove-btn:hover {
+    .qb-remove-btn:hover {
       background: #c82333;
     }
 
-    .remove-btn:focus {
+    .qb-remove-btn:focus {
       outline: 2px solid #0066cc;
       outline-offset: 1px;
     }
@@ -283,14 +283,12 @@ export class QueryConditionComponent {
     return field?.options ?? [];
   });
 
-  // Find matching value input template by type
   protected readonly valueInputTpl = computed(() => {
     const inputType = this.resolvedInputType();
     if (!inputType) return null;
     return this.valueInputTpls().find(d => d.qbValueInput() === inputType)?.template ?? null;
   });
 
-  // Context objects for custom templates
   protected readonly fieldSelectorContext = computed<FieldSelectorContext>(() => ({
     $implicit: this.condition().field,
     fields: this.schema().fields,
@@ -376,7 +374,6 @@ export class QueryConditionComponent {
     return Array.isArray(value) && value.includes(optionValue);
   }
 
-  // Callback methods for custom templates
   protected onFieldKeyChange(key: string | null): void {
     this.condition.set({
       type: 'condition',

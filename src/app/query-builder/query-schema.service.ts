@@ -28,7 +28,7 @@ export class QuerySchemaService extends QuerySchema {
     return getOperatorsForField(field);
   }
 
-  resolveValueInput(field: FieldDef, operator: OperatorDef): InputType | null {
+  resolveValueInput(field: FieldDef, operator: OperatorDef, _operatorKey?: OperatorKey): InputType | null {
     return resolveValueInput(field, operator);
   }
 }
