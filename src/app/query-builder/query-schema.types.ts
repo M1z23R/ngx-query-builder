@@ -2,13 +2,18 @@ export type FieldType = 'text' | 'number' | 'date' | 'bool';
 
 export type ValueKind = 'none' | 'single' | 'multi';
 
-export type InputType =
-  | 'text-input'
-  | 'number-input'
-  | 'date-picker'
-  | 'boolean-toggle'
-  | 'select'
-  | 'multi-select';
+// Built-in input types as constants
+export const INPUT_TYPES = {
+  TEXT: 'text-input',
+  NUMBER: 'number-input',
+  DATE: 'date-picker',
+  BOOLEAN: 'boolean-toggle',
+  SELECT: 'select',
+  MULTI_SELECT: 'multi-select',
+} as const;
+
+// InputType is now string to allow custom types
+export type InputType = string;
 
 export interface FieldOption {
   readonly value: string;
@@ -97,7 +102,11 @@ export const OPERATORS = {
   },
 } as const satisfies Record<string, OperatorDef>;
 
-export type OperatorKey = keyof typeof OPERATORS;
+// OperatorKey is now string to allow custom operators
+export type OperatorKey = string;
+
+// Built-in operator keys type for type safety when using OPERATORS
+export type BuiltinOperatorKey = keyof typeof OPERATORS;
 
 export const FIELDS: readonly FieldDef[] = [
   {
@@ -159,13 +168,13 @@ export const FIELDS: readonly FieldDef[] = [
 ] as const;
 
 const INPUT_TYPE_MAP: Record<FieldType, InputType> = {
-  text: 'text-input',
-  number: 'number-input',
-  date: 'date-picker',
-  bool: 'boolean-toggle',
+  text: INPUT_TYPES.TEXT,
+  number: INPUT_TYPES.NUMBER,
+  date: INPUT_TYPES.DATE,
+  bool: INPUT_TYPES.BOOLEAN,
 };
 
-const NULLABLE_OPERATORS: readonly OperatorKey[] = ['is_null', 'is_not_null'];
+const NULLABLE_OPERATORS: readonly string[] = ['is_null', 'is_not_null'];
 
 export function getOperatorsForField(
   field: FieldDef
@@ -193,13 +202,13 @@ export function resolveValueInput(
 
   if (operator.valueKind === 'multi') {
     if (field.options && field.options.length > 0) {
-      return 'multi-select';
+      return INPUT_TYPES.MULTI_SELECT;
     }
-    return field.type === 'number' ? 'number-input' : 'text-input';
+    return field.type === 'number' ? INPUT_TYPES.NUMBER : INPUT_TYPES.TEXT;
   }
 
   if (field.options && field.options.length > 0) {
-    return 'select';
+    return INPUT_TYPES.SELECT;
   }
 
   return INPUT_TYPE_MAP[field.type];
@@ -242,4 +251,15 @@ export function createEmptyGroup(): QueryGroup {
     negated: false,
     children: [createEmptyCondition()],
   };
+}
+
+// Abstract class for schema customization
+export abstract class QuerySchema {
+  abstract readonly fields: readonly FieldDef[];
+  abstract readonly operators: Record<OperatorKey, OperatorDef>;
+
+  abstract getFieldByKey(key: string): FieldDef | undefined;
+  abstract getOperatorByKey(key: OperatorKey): OperatorDef;
+  abstract getOperatorsForField(field: FieldDef): [OperatorKey, OperatorDef][];
+  abstract resolveValueInput(field: FieldDef, operator: OperatorDef): InputType | null;
 }

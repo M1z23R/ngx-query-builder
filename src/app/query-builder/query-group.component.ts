@@ -2,9 +2,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   input,
+  model,
   output,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { UpperCasePipe } from '@angular/common';
 import { QueryConditionComponent } from './query-condition.component';
 import {
@@ -21,7 +21,7 @@ import {
 @Component({
   selector: 'app-query-group',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, UpperCasePipe, QueryConditionComponent],
+  imports: [UpperCasePipe, QueryConditionComponent],
   template: `
     <div class="query-group" [class.nested]="depth() > 0" [class.negated]="group().negated">
       <div class="group-header">
@@ -53,8 +53,8 @@ import {
           <label class="checkbox-label">
             <input
               type="checkbox"
-              [ngModel]="group().negated"
-              (ngModelChange)="onNegatedChange($event)"
+              [checked]="group().negated"
+              (change)="onNegatedChange($event)"
             />
             NOT
           </label>
@@ -273,50 +273,55 @@ import {
   `,
 })
 export class QueryGroupComponent {
-  readonly group = input.required<QueryGroup>();
+  readonly group = model.required<QueryGroup>();
   readonly depth = input<number>(0);
 
-  readonly groupChange = output<QueryGroup>();
   readonly remove = output<void>();
 
   protected readonly isCondition = isCondition;
   protected readonly isGroup = isGroup;
 
   protected onConjunctionChange(conjunction: Conjunction): void {
-    this.emitUpdate({ conjunction });
+    this.updateGroup({ conjunction });
   }
 
-  protected onNegatedChange(negated: boolean): void {
-    this.emitUpdate({ negated });
+  protected onNegatedChange(event: Event): void {
+    const negated = (event.target as HTMLInputElement).checked;
+    this.updateGroup({ negated });
   }
 
   protected onChildChange(index: number, child: QueryNode): void {
-    const newChildren = this.group().children.map((c, i) =>
-      i === index ? child : c
-    );
-    this.emitUpdate({ children: newChildren });
+    this.group.update(g => ({
+      ...g,
+      children: g.children.map((c, i) => (i === index ? child : c)),
+    }));
   }
 
   protected addCondition(): void {
-    this.emitUpdate({
-      children: [...this.group().children, createEmptyCondition()],
-    });
+    this.group.update(g => ({
+      ...g,
+      children: [...g.children, createEmptyCondition()],
+    }));
   }
 
   protected addGroup(): void {
-    this.emitUpdate({
-      children: [...this.group().children, createEmptyGroup()],
-    });
+    this.group.update(g => ({
+      ...g,
+      children: [...g.children, createEmptyGroup()],
+    }));
   }
 
   protected removeChild(index: number): void {
-    const newChildren = this.group().children.filter((_, i) => i !== index);
-    this.emitUpdate({
-      children: newChildren.length > 0 ? newChildren : [createEmptyCondition()],
+    this.group.update(g => {
+      const newChildren = g.children.filter((_, i) => i !== index);
+      return {
+        ...g,
+        children: newChildren.length > 0 ? newChildren : [createEmptyCondition()],
+      };
     });
   }
 
-  private emitUpdate(partial: Partial<QueryGroup>): void {
-    this.groupChange.emit({ ...this.group(), ...partial });
+  private updateGroup(partial: Partial<QueryGroup>): void {
+    this.group.update(g => ({ ...g, ...partial }));
   }
 }

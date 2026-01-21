@@ -8,12 +8,13 @@ import {
   InputType,
   getOperatorsForField,
   resolveValueInput,
+  QuerySchema,
 } from './query-schema.types';
 
 @Injectable({ providedIn: 'root' })
-export class QuerySchemaService {
+export class QuerySchemaService extends QuerySchema {
   readonly fields: readonly FieldDef[] = FIELDS;
-  readonly operators = OPERATORS;
+  readonly operators: Record<OperatorKey, OperatorDef> = OPERATORS;
 
   getFieldByKey(key: string): FieldDef | undefined {
     return this.fields.find((f) => f.key === key);

@@ -1,10 +1,8 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  forwardRef,
-  signal,
+  model,
 } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { QueryGroupComponent } from './query-group.component';
 import { QueryGroup, createEmptyGroup } from './query-schema.types';
 
@@ -12,20 +10,12 @@ import { QueryGroup, createEmptyGroup } from './query-schema.types';
   selector: 'app-query-builder',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [QueryGroupComponent],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => QueryBuilderComponent),
-      multi: true,
-    },
-  ],
   template: `
     <fieldset class="query-builder-wrapper" [disabled]="disabled()">
       <legend class="sr-only">Query builder</legend>
       <app-query-group
-        [group]="group()"
+        [(group)]="value"
         [depth]="0"
-        (groupChange)="onGroupChange($event)"
       />
     </fieldset>
   `,
@@ -54,32 +44,7 @@ import { QueryGroup, createEmptyGroup } from './query-schema.types';
     }
   `,
 })
-export class QueryBuilderComponent implements ControlValueAccessor {
-  protected readonly group = signal<QueryGroup>(createEmptyGroup());
-  protected readonly disabled = signal(false);
-
-  private onChange: (value: QueryGroup) => void = () => {};
-  private onTouched: () => void = () => {};
-
-  writeValue(value: QueryGroup | null): void {
-    this.group.set(value ?? createEmptyGroup());
-  }
-
-  registerOnChange(fn: (value: QueryGroup) => void): void {
-    this.onChange = fn;
-  }
-
-  registerOnTouched(fn: () => void): void {
-    this.onTouched = fn;
-  }
-
-  setDisabledState(isDisabled: boolean): void {
-    this.disabled.set(isDisabled);
-  }
-
-  protected onGroupChange(group: QueryGroup): void {
-    this.group.set(group);
-    this.onChange(group);
-    this.onTouched();
-  }
+export class QueryBuilderComponent {
+  readonly value = model<QueryGroup>(createEmptyGroup());
+  readonly disabled = model(false);
 }

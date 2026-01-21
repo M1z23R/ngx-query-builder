@@ -1,25 +1,24 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { QueryBuilderComponent } from './query-builder/query-builder.component';
-import { QueryGroup } from './query-builder/query-schema.types';
+import { createEmptyGroup, QueryGroup } from './query-builder/query-schema.types';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, JsonPipe, QueryBuilderComponent],
+  imports: [JsonPipe, QueryBuilderComponent],
   template: `
     <main>
       <h1>Query Builder Demo</h1>
 
       <section aria-labelledby="demo-heading">
         <h2 id="demo-heading">Build a Query</h2>
-        <app-query-builder [formControl]="queryControl" />
+        <app-query-builder [(value)]="query" />
       </section>
 
       <section aria-labelledby="output-heading">
         <h2 id="output-heading">Current Value</h2>
-        <pre><code>{{ queryControl.value | json }}</code></pre>
+        <pre><code>{{ query() | json }}</code></pre>
       </section>
     </main>
   `,
@@ -53,10 +52,5 @@ import { QueryGroup } from './query-builder/query-schema.types';
   `,
 })
 export class App {
-  protected readonly queryControl = new FormControl<QueryGroup>({
-    type: 'group',
-    conjunction: 'and',
-    negated: false,
-    children: [{ type: 'condition', field: null, operator: null, value: null }],
-  });
+  protected readonly query = signal<QueryGroup>(createEmptyGroup());
 }

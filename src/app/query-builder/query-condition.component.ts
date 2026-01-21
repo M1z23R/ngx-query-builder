@@ -4,13 +4,14 @@ import {
   computed,
   inject,
   input,
+  model,
   output,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { QuerySchemaService } from './query-schema.service';
+import { QUERY_SCHEMA } from './query-schema.token';
 import {
   FieldDef,
   FieldOption,
+  INPUT_TYPES,
   InputType,
   OperatorDef,
   OperatorKey,
@@ -20,19 +21,18 @@ import {
 @Component({
   selector: 'app-query-condition',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
   template: `
     <div class="condition-row">
       <div class="field-group">
         <label [for]="'field-' + index()">Field</label>
         <select
           [id]="'field-' + index()"
-          [ngModel]="condition().field"
-          (ngModelChange)="onFieldChange($event)"
+          [value]="condition().field ?? ''"
+          (change)="onFieldChange($event)"
         >
-          <option [ngValue]="null">Select a field</option>
+          <option value="">Select a field</option>
           @for (field of schema.fields; track field.key) {
-            <option [ngValue]="field.key">{{ field.label }}</option>
+            <option [value]="field.key">{{ field.label }}</option>
           }
         </select>
       </div>
@@ -42,12 +42,12 @@ import {
           <label [for]="'operator-' + index()">Operator</label>
           <select
             [id]="'operator-' + index()"
-            [ngModel]="condition().operator"
-            (ngModelChange)="onOperatorChange($event)"
+            [value]="condition().operator ?? ''"
+            (change)="onOperatorChange($event)"
           >
-            <option [ngValue]="null">Select an operator</option>
+            <option value="">Select an operator</option>
             @for (op of availableOperators(); track op[0]) {
-              <option [ngValue]="op[0]">{{ op[1].label }}</option>
+              <option [value]="op[0]">{{ op[1].label }}</option>
             }
           </select>
         </div>
@@ -57,65 +57,68 @@ import {
         <div class="field-group">
           <label [for]="'value-' + index()">Value</label>
           @switch (inputType) {
-            @case ('text-input') {
+            @case (INPUT_TYPES.TEXT) {
               <input
                 type="text"
                 [id]="'value-' + index()"
-                [ngModel]="condition().value"
-                (ngModelChange)="onValueChange($event)"
+                [value]="condition().value ?? ''"
+                (input)="onTextInput($event)"
               />
             }
-            @case ('number-input') {
+            @case (INPUT_TYPES.NUMBER) {
               <input
                 type="number"
                 [id]="'value-' + index()"
-                [ngModel]="condition().value"
-                (ngModelChange)="onValueChange($event)"
+                [value]="condition().value ?? ''"
+                (input)="onNumberInput($event)"
               />
             }
-            @case ('date-picker') {
+            @case (INPUT_TYPES.DATE) {
               <input
                 type="date"
                 [id]="'value-' + index()"
-                [ngModel]="condition().value"
-                (ngModelChange)="onValueChange($event)"
+                [value]="condition().value ?? ''"
+                (input)="onTextInput($event)"
               />
             }
-            @case ('boolean-toggle') {
+            @case (INPUT_TYPES.BOOLEAN) {
               <input
                 type="checkbox"
                 [id]="'value-' + index()"
-                [ngModel]="condition().value"
-                (ngModelChange)="onValueChange($event)"
+                [checked]="condition().value === true"
                 [disabled]="true"
-                aria-describedby="bool-hint-{{ index() }}"
+                [attr.aria-describedby]="'bool-hint-' + index()"
               />
               <span [id]="'bool-hint-' + index()" class="hint">
                 Always true
               </span>
             }
-            @case ('select') {
+            @case (INPUT_TYPES.SELECT) {
               <select
                 [id]="'value-' + index()"
-                [ngModel]="condition().value"
-                (ngModelChange)="onValueChange($event)"
+                [value]="condition().value ?? ''"
+                (change)="onSelectChange($event)"
               >
-                <option [ngValue]="null">Select a value</option>
+                <option value="">Select a value</option>
                 @for (opt of fieldOptions(); track opt.value) {
-                  <option [ngValue]="opt.value">{{ opt.label }}</option>
+                  <option [value]="opt.value">{{ opt.label }}</option>
                 }
               </select>
             }
-            @case ('multi-select') {
+            @case (INPUT_TYPES.MULTI_SELECT) {
               <select
                 [id]="'value-' + index()"
                 multiple
-                [ngModel]="condition().value"
-                (ngModelChange)="onValueChange($event)"
                 [attr.aria-describedby]="'multi-hint-' + index()"
+                (change)="onMultiSelectChange($event)"
               >
                 @for (opt of fieldOptions(); track opt.value) {
-                  <option [ngValue]="opt.value">{{ opt.label }}</option>
+                  <option
+                    [value]="opt.value"
+                    [selected]="isOptionSelected(opt.value)"
+                  >
+                    {{ opt.label }}
+                  </option>
                 }
               </select>
               <span [id]="'multi-hint-' + index()" class="hint">
@@ -199,12 +202,12 @@ import {
   `,
 })
 export class QueryConditionComponent {
-  protected readonly schema = inject(QuerySchemaService);
+  protected readonly schema = inject(QUERY_SCHEMA);
+  protected readonly INPUT_TYPES = INPUT_TYPES;
 
-  readonly condition = input.required<QueryCondition>();
+  readonly condition = model.required<QueryCondition>();
   readonly index = input.required<number>();
 
-  readonly conditionChange = output<QueryCondition>();
   readonly remove = output<void>();
 
   protected readonly selectedField = computed<FieldDef | undefined>(() => {
@@ -236,16 +239,18 @@ export class QueryConditionComponent {
     return field?.options ?? [];
   });
 
-  protected onFieldChange(fieldKey: string | null): void {
-    this.conditionChange.emit({
+  protected onFieldChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.condition.set({
       type: 'condition',
-      field: fieldKey,
+      field: value || null,
       operator: null,
       value: null,
     });
   }
 
-  protected onOperatorChange(operatorKey: OperatorKey | null): void {
+  protected onOperatorChange(event: Event): void {
+    const operatorKey = (event.target as HTMLSelectElement).value || null;
     const field = this.selectedField();
     let defaultValue: unknown = null;
 
@@ -254,22 +259,42 @@ export class QueryConditionComponent {
     } else if (operatorKey) {
       const operator = this.schema.getOperatorByKey(operatorKey);
       const inputType = field ? this.schema.resolveValueInput(field, operator) : null;
-      if (inputType === 'multi-select') {
+      if (inputType === INPUT_TYPES.MULTI_SELECT) {
         defaultValue = [];
       }
     }
 
-    this.conditionChange.emit({
-      ...this.condition(),
-      operator: operatorKey,
+    this.condition.update(c => ({
+      ...c,
+      operator: operatorKey as OperatorKey | null,
       value: defaultValue,
-    });
+    }));
   }
 
-  protected onValueChange(value: unknown): void {
-    this.conditionChange.emit({
-      ...this.condition(),
-      value,
-    });
+  protected onTextInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.condition.update(c => ({ ...c, value }));
+  }
+
+  protected onNumberInput(event: Event): void {
+    const stringValue = (event.target as HTMLInputElement).value;
+    const value = stringValue === '' ? null : Number(stringValue);
+    this.condition.update(c => ({ ...c, value }));
+  }
+
+  protected onSelectChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value || null;
+    this.condition.update(c => ({ ...c, value }));
+  }
+
+  protected onMultiSelectChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const value = Array.from(select.selectedOptions).map(opt => opt.value);
+    this.condition.update(c => ({ ...c, value }));
+  }
+
+  protected isOptionSelected(optionValue: string): boolean {
+    const value = this.condition().value;
+    return Array.isArray(value) && value.includes(optionValue);
   }
 }
