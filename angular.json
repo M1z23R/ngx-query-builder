@@ -6,6 +6,29 @@
   },
   "newProjectRoot": "projects",
   "projects": {
+    "ngx-query-builder": {
+      "projectType": "library",
+      "root": "projects/ngx-query-builder",
+      "sourceRoot": "projects/ngx-query-builder/src",
+      "prefix": "qb",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/ngx-query-builder/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/ngx-query-builder/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/ngx-query-builder/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        }
+      }
+    },
     "querybuilder": {
       "projectType": "application",
       "schematics": {},

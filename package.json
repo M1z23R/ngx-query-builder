@@ -4,9 +4,13 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "build": "ng build querybuilder",
+    "build:lib": "ng build ngx-query-builder",
+    "build:lib:watch": "ng build ngx-query-builder --watch",
+    "watch": "ng build querybuilder --watch --configuration development",
+    "test": "ng test",
+    "prepublish:lib": "yarn build:lib",
+    "publish:lib": "cd dist/ngx-query-builder && npm publish"
   },
   "prettier": {
     "printWidth": 100,
@@ -33,9 +37,11 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "^21.0.1",
     "@angular/build": "^21.0.1",
     "@angular/cli": "^21.0.1",
     "@angular/compiler-cli": "^21.0.0",
+    "ng-packagr": "^21.0.0",
     "@tailwindcss/postcss": "^4.1.12",
     "jsdom": "^27.1.0",
     "postcss": "^8.5.3",

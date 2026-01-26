@@ -1,0 +1,30 @@
+{
+  "name": "ngx-query-builder",
+  "version": "1.0.0",
+  "description": "A flexible, schema-driven query builder component for Angular with full customization support",
+  "keywords": [
+    "angular",
+    "query-builder",
+    "filter",
+    "search",
+    "conditions",
+    "rules",
+    "signals",
+    "standalone"
+  ],
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "bugs": {
+    "url": ""
+  },
+  "homepage": "",
+  "peerDependencies": {
+    "@angular/common": "^17.0.0 || ^18.0.0 || ^19.0.0 || ^20.0.0 || ^21.0.0",
+    "@angular/core": "^17.0.0 || ^18.0.0 || ^19.0.0 || ^20.0.0 || ^21.0.0"
+  },
+  "sideEffects": false
+}
