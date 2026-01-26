@@ -1,4 +1,4 @@
-# ngx-query-builder
+# @m1z23r/ngx-query-builder
 
 A flexible, schema-driven query builder component for Angular 17+ with full customization support. Built with signals and standalone components.
 
@@ -16,9 +16,9 @@ A flexible, schema-driven query builder component for Angular 17+ with full cust
 ## Installation
 
 ```bash
-npm install ngx-query-builder
+npm install @m1z23r/ngx-query-builder
 # or
-yarn add ngx-query-builder
+yarn add @m1z23r/ngx-query-builder
 ```
 
 ## Quick Start
@@ -32,7 +32,7 @@ import {
   QueryGroup,
   createSchema,
   createEmptyGroup,
-} from 'ngx-query-builder';
+} from '@m1z23r/ngx-query-builder';
 
 @Component({
   selector: 'app-root',
@@ -125,7 +125,7 @@ The library includes 13 built-in operators via the `OPERATORS` constant:
 ### Using Default Operators
 
 ```typescript
-import { createSchema } from 'ngx-query-builder';
+import { createSchema } from '@m1z23r/ngx-query-builder';
 
 // Uses OPERATORS by default
 const schema = createSchema({
@@ -138,7 +138,7 @@ const schema = createSchema({
 You can extend or replace the default operators:
 
 ```typescript
-import { createSchema, OPERATORS } from 'ngx-query-builder';
+import { createSchema, OPERATORS } from '@m1z23r/ngx-query-builder';
 
 const schema = createSchema({
   fields: [...],
@@ -620,7 +620,7 @@ import type {
   NegationToggleContext,
   AddButtonsContext,
   RemoveGroupButtonContext,
-} from 'ngx-query-builder';
+} from '@m1z23r/ngx-query-builder';
 ```
 
 ## Browser Support

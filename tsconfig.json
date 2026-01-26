@@ -16,7 +16,7 @@
     "module": "preserve",
     "baseUrl": "./",
     "paths": {
-      "ngx-query-builder": ["dist/ngx-query-builder"]
+      "@m1z23r/ngx-query-builder": ["dist/ngx-query-builder"]
     }
   },
   "angularCompilerOptions": {
