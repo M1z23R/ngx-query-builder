@@ -627,6 +627,124 @@ import type {
 
 Supports all browsers that Angular 17+ supports.
 
+## Claude Code Integration
+
+If you use [Claude Code](https://claude.com/claude-code), add the following to your project's `CLAUDE.md` file to help Claude work effectively with this library:
+
+<details>
+<summary>Click to expand CLAUDE.md snippet</summary>
+
+````markdown
+## @m1z23r/ngx-query-builder
+
+Schema-driven query builder for Angular 17+. Standalone components, signals-based, fully customizable.
+
+### Component Usage
+
+```typescript
+import {
+  QueryBuilderComponent,
+  QueryGroup,
+  createSchema,
+  createEmptyGroup,
+  OPERATORS,
+} from '@m1z23r/ngx-query-builder';
+```
+
+- Selector: `<qb-query-builder [schema]="schema" [(value)]="query" />`
+- `schema` is a required input (`QuerySchema`), created via `createSchema()`
+- `value` is a two-way model signal (`QueryGroup`), initialized via `createEmptyGroup()`
+- `disabled` is an optional two-way model signal (`boolean`)
+
+### Schema Configuration
+
+```typescript
+const schema = createSchema({
+  fields: [
+    { key: 'name', label: 'Name', type: 'text' },
+    { key: 'age', label: 'Age', type: 'number', nullable: true },
+    { key: 'created_at', label: 'Created At', type: 'date' },
+    { key: 'is_active', label: 'Active', type: 'bool' },
+    { key: 'status', label: 'Status', type: 'text', options: [
+      { value: 'active', label: 'Active' },
+      { value: 'inactive', label: 'Inactive' },
+    ]},
+  ],
+  operators: { ...OPERATORS }, // Optional, defaults to built-in OPERATORS
+  resolveValueInput: (field, operator, operatorKey) => {
+    // Return custom input type string or null for default resolution
+    return null;
+  },
+});
+```
+
+- `FieldDef.type`: `'text' | 'number' | 'date' | 'bool'`
+- `FieldDef.options`: Adds select/multi-select dropdown behavior
+- `FieldDef.nullable`: Enables `is_null` / `is_not_null` operators for that field
+
+### Built-in Operators (OPERATORS constant)
+
+`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `contains`, `starts_with`, `ends_with`, `in`, `nin`, `is_null`, `is_not_null`
+
+Custom operators can be added alongside defaults: `operators: { ...OPERATORS, between: { label: 'between', supportedTypes: ['number', 'date'], valueKind: 'multi' } }`
+
+### Built-in Input Types (INPUT_TYPES constant)
+
+`text-input`, `number-input`, `date-picker`, `boolean-toggle`, `select`, `multi-select`
+
+These are resolved automatically based on field type and operator. Override with `resolveValueInput` in schema options.
+
+### Query Data Structure
+
+```typescript
+// Output is a tree of groups and conditions:
+interface QueryGroup {
+  type: 'group';
+  conjunction: 'and' | 'or';
+  negated: boolean;
+  children: QueryNode[];
+}
+interface QueryCondition {
+  type: 'condition';
+  field: string | null;
+  operator: string | null;
+  value: unknown;
+}
+type QueryNode = QueryGroup | QueryCondition;
+```
+
+### Template Customization (8 directives)
+
+All customizations use `ng-template` with typed contexts inside `<qb-query-builder>`:
+
+**Condition-level:**
+- `<ng-template qbFieldSelector let-field let-fields="fields" let-onChange="onChange">` — Custom field dropdown
+- `<ng-template qbOperatorSelector let-operator let-operators="operators" let-onChange="onChange">` — Custom operator dropdown. `operators` is `[string, OperatorDef][]`
+- `<ng-template [qbValueInput]="'input-type-name'" let-value let-onChange="onChange">` — Custom value input for a specific input type. Additional context: `field`, `operator`, `operatorKey`, `options`, `placeholder`, `inputType`
+- `<ng-template qbRemoveButton let-onRemove="onRemove">` — Custom remove condition button
+
+**Group-level:**
+- `<ng-template qbConjunctionSelector let-conjunction let-onChange="onChange">` — Custom AND/OR toggle
+- `<ng-template qbNegationToggle let-negated let-onChange="onChange">` — Custom NOT toggle
+- `<ng-template qbAddButtons let-onAddCondition="onAddCondition" let-onAddGroup="onAddGroup">` — Custom add buttons
+- `<ng-template qbRemoveGroupButton let-depth="depth" let-onRemove="onRemove">` — Custom remove group button. `depth` is 0 for root group
+
+**Imports for directives:** `QbFieldSelectorDirective`, `QbOperatorSelectorDirective`, `QbValueInputDirective`, `QbRemoveButtonDirective`, `QbConjunctionSelectorDirective`, `QbNegationToggleDirective`, `QbAddButtonsDirective`, `QbRemoveGroupButtonDirective`
+
+### Utility Functions
+
+- `createSchema(options)` — Create a `QuerySchema` from fields, operators, and optional `resolveValueInput`
+- `createEmptyGroup()` — Returns a `QueryGroup` with one empty condition
+- `createEmptyCondition()` — Returns a `QueryCondition` with all fields null
+- `isCondition(node)` / `isGroup(node)` — Type guards for `QueryNode`
+
+### Key CSS Classes (for styling defaults)
+
+`.qb-wrapper`, `.qb-group`, `.qb-nested`, `.qb-negated`, `.qb-group-header`, `.qb-condition-row`, `.qb-condition`, `.qb-add-btn`, `.qb-remove-btn`, `.qb-toggle-buttons`, `.qb-active`, `.qb-sr-only`
+````
+
+</details>
+
 ## License
 
 MIT
