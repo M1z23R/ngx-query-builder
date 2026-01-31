@@ -11,6 +11,7 @@ import { NgTemplateOutlet, UpperCasePipe } from '@angular/common';
 import { QueryConditionComponent } from './query-condition.component';
 import {
   Conjunction,
+  FieldDef,
   QueryGroup,
   QueryNode,
   QuerySchema,
@@ -112,6 +113,7 @@ import {
               [condition]="child"
               [index]="$index"
               [schema]="schema()"
+              [addFieldFn]="addFieldFn()"
               [fieldSelectorTpl]="fieldSelectorTpl()"
               [operatorSelectorTpl]="operatorSelectorTpl()"
               [valueInputTpls]="valueInputTpls()"
@@ -124,6 +126,7 @@ import {
               [group]="child"
               [depth]="depth() + 1"
               [schema]="schema()"
+              [addFieldFn]="addFieldFn()"
               [fieldSelectorTpl]="fieldSelectorTpl()"
               [operatorSelectorTpl]="operatorSelectorTpl()"
               [valueInputTpls]="valueInputTpls()"
@@ -330,6 +333,7 @@ export class QueryGroupComponent {
   readonly group = model.required<QueryGroup>();
   readonly depth = input<number>(0);
   readonly schema = input.required<QuerySchema>();
+  readonly addFieldFn = input<(field: FieldDef) => void>();
 
   // Template inputs - condition level
   readonly fieldSelectorTpl = input<TemplateRef<FieldSelectorContext>>();

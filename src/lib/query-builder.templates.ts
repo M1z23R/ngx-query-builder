@@ -13,6 +13,8 @@ export interface FieldSelectorContext {
   fields: readonly FieldDef[];
   /** Call this when selection changes */
   onChange: (key: string | null) => void;
+  /** Call this to dynamically add a new field to the schema */
+  addField?: (field: FieldDef) => void;
 }
 
 /** Context provided to custom operator selector templates */

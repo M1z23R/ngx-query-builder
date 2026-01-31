@@ -5,6 +5,7 @@ import {
   input,
   model,
   output,
+  signal,
   TemplateRef,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
@@ -245,6 +246,7 @@ export class QueryConditionComponent {
   readonly condition = model.required<QueryCondition>();
   readonly index = input.required<number>();
   readonly schema = input.required<QuerySchema>();
+  readonly addFieldFn = input<(field: FieldDef) => void>();
 
   // Template inputs
   readonly fieldSelectorTpl = input<TemplateRef<FieldSelectorContext>>();
@@ -254,9 +256,17 @@ export class QueryConditionComponent {
 
   readonly remove = output<void>();
 
+  /** Holds a newly added field until the schema propagates with it */
+  private readonly pendingField = signal<FieldDef | undefined>(undefined);
+
   protected readonly selectedField = computed<FieldDef | undefined>(() => {
     const key = this.condition().field;
-    return key ? this.schema().getFieldByKey(key) : undefined;
+    if (!key) return undefined;
+    const fromSchema = this.schema().getFieldByKey(key);
+    if (fromSchema) return fromSchema;
+    // Fall back to pending field while schema hasn't propagated yet
+    const pending = this.pendingField();
+    return pending?.key === key ? pending : undefined;
   });
 
   protected readonly selectedOperator = computed<OperatorDef | undefined>(() => {
@@ -302,11 +312,20 @@ export class QueryConditionComponent {
     return '';
   });
 
-  protected readonly fieldSelectorContext = computed<FieldSelectorContext>(() => ({
-    $implicit: this.condition().field,
-    fields: this.schema().fields,
-    onChange: (key: string | null) => this.onFieldKeyChange(key),
-  }));
+  protected readonly fieldSelectorContext = computed<FieldSelectorContext>(() => {
+    const fn = this.addFieldFn();
+    return {
+      $implicit: this.condition().field,
+      fields: this.schema().fields,
+      onChange: (key: string | null) => this.onFieldKeyChange(key),
+      addField: fn
+        ? (field: FieldDef) => {
+            this.pendingField.set(field);
+            fn(field);
+          }
+        : undefined,
+    };
+  });
 
   protected readonly operatorSelectorContext = computed<OperatorSelectorContext>(() => ({
     $implicit: this.condition().operator,

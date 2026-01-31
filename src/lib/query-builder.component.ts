@@ -3,11 +3,11 @@ import {
   Component,
   contentChild,
   contentChildren,
-  input,
   model,
+  output,
 } from '@angular/core';
 import { QueryGroupComponent } from './query-group.component';
-import { QueryGroup, QuerySchema, createEmptyGroup } from './query-builder.types';
+import { FieldDef, QueryGroup, QuerySchema, createEmptyGroup } from './query-builder.types';
 import {
   QbAddButtonsDirective,
   QbConjunctionSelectorDirective,
@@ -52,6 +52,7 @@ import {
         [(group)]="value"
         [depth]="0"
         [schema]="schema()"
+        [addFieldFn]="handleAddField"
         [fieldSelectorTpl]="fieldSelectorTpl()?.template"
         [operatorSelectorTpl]="operatorSelectorTpl()?.template"
         [valueInputTpls]="valueInputTpls()"
@@ -95,8 +96,17 @@ export class QueryBuilderComponent {
   /** Whether the query builder is disabled */
   readonly disabled = model(false);
 
-  /** The schema defining fields and operators (required) */
-  readonly schema = input.required<QuerySchema>();
+  /** The schema defining fields and operators (required, two-way bindable) */
+  readonly schema = model.required<QuerySchema>();
+
+  /** Emitted when a field is dynamically added to the schema */
+  readonly fieldAdded = output<FieldDef>();
+
+  /** Callback to add a field dynamically. Updates the schema and emits fieldAdded. */
+  protected readonly handleAddField = (field: FieldDef): void => {
+    this.schema.update(s => s.addField(field));
+    this.fieldAdded.emit(field);
+  };
 
   // Content queries for custom templates - condition level
   readonly fieldSelectorTpl = contentChild(QbFieldSelectorDirective);

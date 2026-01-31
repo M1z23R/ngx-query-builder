@@ -154,6 +154,15 @@ export interface QuerySchema {
   getOperatorByKey(key: OperatorKey): OperatorDef;
   getOperatorsForField(field: FieldDef): [OperatorKey, OperatorDef][];
   resolveValueInput(field: FieldDef, operator: OperatorDef, operatorKey?: OperatorKey): InputType | null;
+
+  /** Returns a new schema with the field added. No-op if a field with the same key already exists. */
+  addField(field: FieldDef): QuerySchema;
+  /** Returns a new schema with the field removed. No-op if the key doesn't exist. */
+  removeField(key: string): QuerySchema;
+  /** Returns a new schema with the operator added. No-op if an operator with the same key already exists. */
+  addOperator(key: OperatorKey, operator: OperatorDef): QuerySchema;
+  /** Returns a new schema with the operator removed. No-op if the key doesn't exist. */
+  removeOperator(key: OperatorKey): QuerySchema;
 }
 
 // ============================================================================
@@ -275,6 +284,35 @@ export function createSchema(options: CreateSchemaOptions): QuerySchema {
       }
       // Fall back to default
       return defaultResolveValueInput(field, operator);
+    },
+
+    addField(field: FieldDef): QuerySchema {
+      if (options.fields.some(f => f.key === field.key)) {
+        return this;
+      }
+      return createSchema({ ...options, fields: [...options.fields, field] });
+    },
+
+    removeField(key: string): QuerySchema {
+      if (!options.fields.some(f => f.key === key)) {
+        return this;
+      }
+      return createSchema({ ...options, fields: options.fields.filter(f => f.key !== key) });
+    },
+
+    addOperator(key: OperatorKey, operator: OperatorDef): QuerySchema {
+      if (operators[key]) {
+        return this;
+      }
+      return createSchema({ ...options, operators: { ...operators, [key]: operator } });
+    },
+
+    removeOperator(key: OperatorKey): QuerySchema {
+      if (!operators[key]) {
+        return this;
+      }
+      const { [key]: _, ...rest } = operators;
+      return createSchema({ ...options, operators: rest });
     },
   };
 }
